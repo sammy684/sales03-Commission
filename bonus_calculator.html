@@ -247,6 +247,9 @@ summary:hover { color: #4a5568; }
 </head>
 <body>
 
+<!-- ── Google Identity Services ── -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 <!-- ── Auth Gate ── -->
 <div id="auth-gate" style="
   position:fixed;inset:0;z-index:9999;
@@ -254,48 +257,82 @@ summary:hover { color: #4a5568; }
   display:flex;align-items:center;justify-content:center;
 ">
   <div style="
-    background:#fff;border-radius:16px;padding:36px 32px;
-    width:100%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,0.25);
+    background:#fff;border-radius:16px;padding:40px 32px 32px;
+    width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.25);
     text-align:center;
   ">
-    <div style="font-size:2rem;margin-bottom:8px">🔐</div>
-    <h2 style="color:#1a365d;font-size:1.2rem;margin-bottom:4px">業務獎金試算器</h2>
-    <p style="color:#718096;font-size:.8rem;margin-bottom:24px">請輸入公司信箱登入</p>
-    <input id="auth-email" type="email" placeholder="yourname@digitm.com.tw"
-      style="
-        width:100%;padding:10px 14px;border:1.5px solid #cbd5e0;
-        border-radius:8px;font-size:.95rem;font-family:inherit;
-        margin-bottom:10px;text-align:center;
-      "
-      onkeydown="if(event.key==='Enter')doAuth()"
-    >
-    <div id="auth-err" style="color:#e53e3e;font-size:.8rem;min-height:18px;margin-bottom:8px"></div>
-    <button onclick="doAuth()" style="
-      width:100%;padding:11px;background:#2b6cb0;color:#fff;
-      border:none;border-radius:8px;font-size:.95rem;font-weight:700;
-      font-family:inherit;cursor:pointer;
-    ">進入試算器</button>
-    <p style="font-size:.72rem;color:#a0aec0;margin-top:14px">僅限 @digitm.com.tw 網域使用</p>
+    <div style="font-size:3rem;margin-bottom:12px">🏢</div>
+    <h2 style="color:#1a365d;font-size:1.25rem;font-weight:700;margin-bottom:6px">業務獎金試算器</h2>
+    <p style="color:#718096;font-size:.85rem;margin-bottom:28px">請使用 @digitm.com.tw 帳號登入</p>
+
+    <!-- Google Sign-In Button -->
+    <div id="g_id_onload"
+      data-client_id="52430741509-bm9dmqjeoe8lolg2en2b40stlob6akj4.apps.googleusercontent.com"
+      data-callback="handleGoogleLogin"
+      data-auto_prompt="false"
+      data-itp_support="true">
+    </div>
+    <div style="display:flex;justify-content:center;margin-bottom:16px">
+      <div class="g_id_signin"
+        data-type="standard"
+        data-size="large"
+        data-theme="outline"
+        data-text="signin_with"
+        data-shape="rectangular"
+        data-logo_alignment="left"
+        data-width="300">
+      </div>
+    </div>
+
+    <div id="auth-err" style="
+      color:#e53e3e;font-size:.82rem;min-height:20px;
+      background:#fff5f5;border-radius:6px;padding:6px 10px;
+      display:none;margin-bottom:8px;
+    "></div>
+
+    <p style="font-size:.7rem;color:#a0aec0;margin-top:16px">僅限 @digitm.com.tw 網域使用</p>
   </div>
 </div>
 
 <script>
+// ── Restore session ──
 (function(){
-  const saved = sessionStorage.getItem('digitm_auth');
-  if(saved === '1') document.getElementById('auth-gate').style.display = 'none';
+  if(sessionStorage.getItem('digitm_auth') === '1'){
+    document.getElementById('auth-gate').style.display = 'none';
+  }
 })();
 
-function doAuth(){
-  const email = document.getElementById('auth-email').value.trim().toLowerCase();
-  const err   = document.getElementById('auth-err');
-  if(!email){ err.textContent = '請輸入信箱'; return; }
-  if(!email.endsWith('@digitm.com.tw')){
-    err.textContent = '僅限 @digitm.com.tw 信箱登入';
-    document.getElementById('auth-email').style.borderColor = '#e53e3e';
-    return;
+// ── Google OAuth callback ──
+function handleGoogleLogin(response) {
+  try {
+    // Decode JWT payload (no signature verification needed client-side)
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    const email   = (payload.email || '').toLowerCase();
+    const name    = payload.name || email;
+    const errDiv  = document.getElementById('auth-err');
+
+    if (!email.endsWith('@digitm.com.tw')) {
+      errDiv.textContent = `${email} 不屬於 @digitm.com.tw，無法登入`;
+      errDiv.style.display = 'block';
+      return;
+    }
+
+    // Allowed — store session
+    sessionStorage.setItem('digitm_auth', '1');
+    sessionStorage.setItem('digitm_user', email);
+    sessionStorage.setItem('digitm_name', name);
+    document.getElementById('auth-gate').style.display = 'none';
+
+    // Pre-fill 業務名稱 if input exists
+    const nameInput = document.getElementById('name');
+    if (nameInput && !nameInput.value) {
+      nameInput.value = name.replace(/@.*/, '');
+      updateMeta();
+    }
+  } catch(e) {
+    document.getElementById('auth-err').textContent = '登入失敗，請重試';
+    document.getElementById('auth-err').style.display = 'block';
   }
-  sessionStorage.setItem('digitm_auth','1');
-  document.getElementById('auth-gate').style.display = 'none';
 }
 </script>
 
