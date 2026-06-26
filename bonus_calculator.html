@@ -270,7 +270,8 @@ summary:hover { color: #4a5568; }
       data-client_id="52430741509-bm9dmqjeoe8lolg2en2b40stlob6akj4.apps.googleusercontent.com"
       data-callback="handleGoogleLogin"
       data-auto_prompt="false"
-      data-itp_support="true">
+      data-itp_support="true"
+      data-use_fedcm_for_prompt="true">
     </div>
     <div style="display:flex;justify-content:center;margin-bottom:16px">
       <div class="g_id_signin"
@@ -280,8 +281,19 @@ summary:hover { color: #4a5568; }
         data-text="signin_with"
         data-shape="rectangular"
         data-logo_alignment="left"
-        data-width="300">
+        data-width="280"
+        data-ux_mode="popup">
       </div>
+    </div>
+    <div id="gsi-fallback" style="display:none;margin-bottom:16px">
+      <button onclick="googleSignInFallback()" style="
+        width:280px;padding:10px 16px;border:1.5px solid #dadce0;border-radius:6px;
+        background:#fff;cursor:pointer;font-size:.9rem;display:flex;align-items:center;
+        gap:10px;justify-content:center;font-family:inherit;
+      ">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.3 0 5.9 1.1 7.9 2.9l5.9-5.9C34.1 3.4 29.5 1.5 24 1.5 14.7 1.5 6.8 7 3.2 14.9l6.9 5.3C12 14.7 17.5 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.4-4.1 6.9-10.1 7.1-17.1z"/><path fill="#FBBC05" d="M10.1 28.8A14.5 14.5 0 0 1 9.5 24c0-1.7.3-3.3.6-4.8L3.2 14c-1.2 2.5-1.9 5.2-1.9 8s.7 5.5 1.9 8l6.9-5.2z"/><path fill="#34A853" d="M24 46.5c5.5 0 10.1-1.8 13.5-4.9l-7.6-5.9c-1.8 1.2-4.2 1.9-5.9 1.9-6.5 0-12-5.2-13.9-11.8l-6.9 5.3C6.8 39 14.7 46.5 24 46.5z"/></svg>
+        使用 Google 帳號登入
+      </button>
     </div>
 
     <div id="auth-err" style="
@@ -302,11 +314,45 @@ summary:hover { color: #4a5568; }
   }
 })();
 
+// ── Fallback: show manual button if GIS button doesn't render within 3s ──
+setTimeout(function(){
+  const gsiBtn = document.querySelector('.g_id_signin iframe');
+  if (!gsiBtn) {
+    document.querySelector('.g_id_signin').style.display = 'none';
+    document.getElementById('gsi-fallback').style.display = 'block';
+  }
+}, 3000);
+
+// ── Fallback OAuth via redirect ──
+function googleSignInFallback() {
+  const clientId = '52430741509-bm9dmqjeoe8lolg2en2b40stlob6akj4.apps.googleusercontent.com';
+  const redirectUri = encodeURIComponent(location.href.split('?')[0]);
+  const state = Math.random().toString(36).substring(2);
+  sessionStorage.setItem('oauth_state', state);
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=id_token&scope=email%20profile&nonce=${state}&state=${state}`;
+  location.href = url;
+}
+
+// ── Handle redirect OAuth response ──
+(function(){
+  const hash = location.hash;
+  if (hash && hash.includes('id_token=')) {
+    const params = new URLSearchParams(hash.substring(1));
+    const idToken = params.get('id_token');
+    if (idToken) {
+      handleGoogleLogin({ credential: idToken });
+      history.replaceState(null, '', location.pathname);
+    }
+  }
+})();
+
 // ── Google OAuth callback ──
 function handleGoogleLogin(response) {
   try {
     // Decode JWT payload (no signature verification needed client-side)
-    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    const b64 = response.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    const raw = atob(b64);
+    const payload = JSON.parse(decodeURIComponent(raw.split('').map(c=>'%'+c.charCodeAt(0).toString(16).padStart(2,'0')).join('')));
     const email   = (payload.email || '').toLowerCase();
     const name    = payload.name || email;
     const errDiv  = document.getElementById('auth-err');
