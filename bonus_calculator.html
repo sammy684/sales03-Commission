@@ -573,17 +573,17 @@ function handleGoogleLogin(response) {
     <div class="sc">
       <div class="sc-lbl">Q3 每季可領<br>（達標獎金 80%）</div>
       <div class="sc-val" id="s_q3m">—</div>
-      <div class="sc-sub">本季結算後發放</div>
+      <div class="sc-sub">Q3 結算後發放</div>
     </div>
     <div class="sc">
       <div class="sc-lbl">Q4 每季可領<br>（達標獎金 80%）</div>
       <div class="sc-val" id="s_q4m">—</div>
-      <div class="sc-sub">本季結算後發放</div>
+      <div class="sc-sub">Q4 結算後發放</div>
     </div>
     <div class="sc">
       <div class="sc-lbl">年底可領<br>（全年績效獎金）</div>
       <div class="sc-val" id="s_ye">—</div>
-      <div class="sc-sub">Q4 結算後發放</div>
+      <div class="sc-sub">年底結算後發放</div>
     </div>
   </div>
 
@@ -613,7 +613,7 @@ function handleGoogleLogin(response) {
 <script>
 const $  = id => document.getElementById(id);
 const fN = n  => isNaN(n)||n===null ? '—' : Math.round(n).toLocaleString('zh-TW') + ' 元';
-const fP = n  => (n*100).toFixed(2) + '%';
+const fP = n  => (Math.floor(n*10000)/100).toFixed(2) + '%';
 const vv = id => parseFloat($(id).value);
 
 function getRate(r) {
@@ -758,7 +758,7 @@ function calcQ(pre, isQ4, q3Data) {
              <span class="rl">績效基準 ${fN(perfBase)} × ${appliedCoeff.toFixed(2)}×</span>
              <span class="rv" style="color:#a0aec0">${fN(perfEst)}</span>
            </div>
-           <p style="font-size:.7rem;color:#a0aec0;font-style:italic;margin-top:5px;text-align:right">★ 此金額不發放，年底以 Q4 最終係數統一結算</p>
+           <p style="font-size:.7rem;color:#a0aec0;font-style:italic;margin-top:5px;text-align:right">★ 此金額在當季不發放，累計到年底結算當年度的總成果，計算出全年最終係數，再統一核算發放金額</p>
          </div>`
       : `<div class="rr" style="margin-top:4px"><span class="rl">績效估算</span>
            <span class="rv" style="color:#a0aec0;font-size:.8rem">請補輸入指標</span></div>`;
