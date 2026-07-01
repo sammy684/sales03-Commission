@@ -177,6 +177,7 @@ input::placeholder { color: #cbd5e0; }
 .total-lbl { font-size: .9rem; opacity: .88; }
 .total-val { font-size: 1.7rem; font-weight: 700; }
 .total-note { font-size: .7rem; opacity: .6; margin-top: 8px; text-align: center; }
+@media(max-width:700px){ #summary-cols { flex-direction: column; } #ye-bottom { width: 100% !important; } }
 
 /* ── Print button ── */
 .print-bar {
@@ -568,57 +569,65 @@ function handleGoogleLogin(response) {
 <div class="summary">
   <h2>📊 H2 獎金總覽（Q3 ＋ Q4）</h2>
 
-  <!-- 3 main payout columns -->
-  <div class="sum-grid3">
-    <div class="sc">
-      <div class="sc-lbl">Q3 每季可領<br>（達標獎金 80%）</div>
-      <div class="sc-val" id="s_q3m">—</div>
-      <div class="sc-sub">Q3 結算後發放</div>
-    </div>
-    <div class="sc">
-      <div class="sc-lbl">Q4 每季可領<br>（達標獎金 80%）</div>
-      <div class="sc-val" id="s_q4m">—</div>
-      <div class="sc-sub">Q4 結算後發放</div>
-    </div>
-    <div class="sc">
-      <div class="sc-lbl">年底可領<br>（全年績效獎金）</div>
-      <div class="sc-val" id="s_ye">—</div>
-      <div class="sc-sub">年底結算後發放</div>
-    </div>
-  </div>
+  <!-- Two-column layout: year-end left, overview right -->
+  <div id="summary-cols" style="display:flex;gap:16px;align-items:flex-start">
 
-  <hr class="divider">
-
-  <!-- coefficient reference row -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-    <div class="sc sc-dim">
-      <div class="sc-lbl">Q3 績效係數（參考）</div>
-      <div class="sc-val" id="s_q3c">—</div>
+    <!-- Left: Year-end breakdown (hidden until Q4 entered) -->
+    <div class="ye-block" id="ye-bottom" style="display:none;flex-shrink:0;width:280px">
+      <div class="ye-title">🏁 年底績效獎金結算（H2 合計）</div>
+      <div class="rr"><span class="rl">Q3 績效獎金基準</span><span class="rv" id="ye_q3b">—</span></div>
+      <div class="rr"><span class="rl">Q4 績效獎金基準</span><span class="rv" id="ye_q4b">—</span></div>
+      <div class="rr" style="font-weight:600"><span class="rl">H2 基準合計</span><span class="rv" id="ye_h2b">—</span></div>
+      <div class="rr"><span class="rl">× Q4 最終係數</span><span class="rv" id="ye_coeff">—</span></div>
+      <div class="hl hl-green" style="margin-top:8px">
+        <span class="hl-lbl">年底績效獎金（全額）</span>
+        <span class="hl-val" id="ye_ttl">—</span>
+      </div>
     </div>
-    <div class="sc sc-dim">
-      <div class="sc-lbl">Q4 最終係數（採用）</div>
-      <div class="sc-val" id="s_q4c">—</div>
-    </div>
-  </div>
 
-  <!-- total -->
-  <div class="total-bar">
-    <div class="total-lbl">H2 獎金總計</div>
-    <div class="total-val" id="s_total">請輸入數據</div>
-  </div>
-  <p class="total-note" id="s_breakdown"></p>
+    <!-- Right: Main overview -->
+    <div style="flex:1;min-width:0">
+      <!-- 3 main payout columns -->
+      <div class="sum-grid3">
+        <div class="sc">
+          <div class="sc-lbl">Q3 每季可領<br>（達標獎金 80%）</div>
+          <div class="sc-val" id="s_q3m">—</div>
+          <div class="sc-sub">Q3 結算後發放</div>
+        </div>
+        <div class="sc">
+          <div class="sc-lbl">Q4 每季可領<br>（達標獎金 80%）</div>
+          <div class="sc-val" id="s_q4m">—</div>
+          <div class="sc-sub">Q4 結算後發放</div>
+        </div>
+        <div class="sc">
+          <div class="sc-lbl">年底可領<br>（全年績效獎金）</div>
+          <div class="sc-val" id="s_ye">—</div>
+          <div class="sc-sub">年底結算後發放</div>
+        </div>
+      </div>
 
-  <!-- Year-end breakdown (inside summary box) -->
-  <div class="ye-block" id="ye-bottom" style="margin-top:16px;display:none">
-    <div class="ye-title">🏁 年底績效獎金結算（H2 合計）</div>
-    <div class="rr"><span class="rl">Q3 績效獎金基準</span><span class="rv" id="ye_q3b">—</span></div>
-    <div class="rr"><span class="rl">Q4 績效獎金基準</span><span class="rv" id="ye_q4b">—</span></div>
-    <div class="rr" style="font-weight:600"><span class="rl">H2 基準合計</span><span class="rv" id="ye_h2b">—</span></div>
-    <div class="rr"><span class="rl">× Q4 最終係數</span><span class="rv" id="ye_coeff">—</span></div>
-    <div class="hl hl-green" style="margin-top:8px">
-      <span class="hl-lbl">年底績效獎金（全額）</span>
-      <span class="hl-val" id="ye_ttl">—</span>
+      <hr class="divider">
+
+      <!-- coefficient reference row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div class="sc sc-dim">
+          <div class="sc-lbl">Q3 績效係數（參考）</div>
+          <div class="sc-val" id="s_q3c">—</div>
+        </div>
+        <div class="sc sc-dim">
+          <div class="sc-lbl">Q4 最終係數（採用）</div>
+          <div class="sc-val" id="s_q4c">—</div>
+        </div>
+      </div>
+
+      <!-- total -->
+      <div class="total-bar">
+        <div class="total-lbl">H2 獎金總計</div>
+        <div class="total-val" id="s_total">請輸入數據</div>
+      </div>
+      <p class="total-note" id="s_breakdown"></p>
     </div>
+
   </div>
 </div>
 
