@@ -609,6 +609,19 @@ function handleGoogleLogin(response) {
   <p class="total-note" id="s_breakdown"></p>
 </div>
 
+<!-- ── Year-end Bottom Section ── -->
+<div class="ye-block" id="ye-bottom" style="margin-bottom:16px;display:none">
+  <div class="ye-title">🏁 年底績效獎金結算（H2 合計）</div>
+  <div class="rr"><span class="rl">Q3 績效獎金基準</span><span class="rv" id="ye_q3b">—</span></div>
+  <div class="rr"><span class="rl">Q4 績效獎金基準</span><span class="rv" id="ye_q4b">—</span></div>
+  <div class="rr" style="font-weight:600"><span class="rl">H2 基準合計</span><span class="rv" id="ye_h2b">—</span></div>
+  <div class="rr"><span class="rl">× Q4 最終係數</span><span class="rv" id="ye_coeff">—</span></div>
+  <div class="hl hl-green" style="margin-top:8px">
+    <span class="hl-lbl">年底績效獎金（全額）</span>
+    <span class="hl-val" id="ye_ttl">—</span>
+  </div>
+</div>
+
 <!-- ── Script ── -->
 <script>
 const $  = id => document.getElementById(id);
@@ -679,17 +692,7 @@ function calcQ(pre, isQ4, q3Data) {
     perfEst      = perfBase * appliedCoeff;
   }
 
-  // ── Render zero ──
-  if (commRate === 0) {
-    rd.innerHTML = `
-      <div class="res-box">
-        <div class="rr"><span class="rl">達成率</span><span class="rv">${fP(achRate)}</span></div>
-      </div>
-      <div class="fail-box">⚠️ 未達 70% 門檻，本季獎金為零</div>`;
-    return { targetBonus:0, perfBase:0, appliedCoeff, perfEst:0, finalCoeff };
-  }
-
-  // ── Coefficient table ──
+  // ── Helper functions ──
   function penAchieveDesc(d) {
     const p = (Math.abs(d)*100).toFixed(1);
     if (d > 0.0001) return `超過目標 ${p}%`;
@@ -703,6 +706,7 @@ function calcQ(pre, isQ4, q3Data) {
     return '與去年持平';
   }
 
+  // ── Coefficient table (built regardless of threshold) ──
   let coeffTable = '';
   if (penCoeff!==null && aspCoeff!==null) {
     const [pl,pc] = coeffMeta(penCoeff);
@@ -748,6 +752,55 @@ function calcQ(pre, isQ4, q3Data) {
       <span class="rv">${aspCoeff.toFixed(2)}× ${badge(l,c)}</span></div>`;
   }
 
+  // ── Q4 year-end block (built regardless of threshold; perfBase=0 when below threshold) ──
+  let q4YEBlock = '';
+  if (isQ4) {
+    const q3BaseYE = q3Data ? q3Data.perfBase : 0;
+    const h2BaseYE = q3BaseYE + perfBase;
+
+    let yeCalcRows = '';
+    if (appliedCoeff !== null) {
+      const yeTotalYE = h2BaseYE * appliedCoeff;
+      yeCalcRows = `
+        <div class="rr"><span class="rl">Q3 績效獎金基準</span><span class="rv">${fN(q3BaseYE)}</span></div>
+        <div class="rr"><span class="rl">Q4 績效獎金基準</span><span class="rv">${fN(perfBase)}</span></div>
+        <div class="rr"><span class="rl">H2 基準合計</span><span class="rv"><b>${fN(h2BaseYE)}</b></span></div>
+        <div class="rr"><span class="rl">× Q4 最終係數</span><span class="rv">${appliedCoeff.toFixed(2)}×</span></div>
+        <div class="hl hl-green" style="margin-top:8px">
+          <span class="hl-lbl">年底績效獎金（全額）</span>
+          <span class="hl-val">${fN(yeTotalYE)}</span>
+        </div>`;
+    } else {
+      yeCalcRows = `<div class="rr"><span class="rl">年底績效獎金</span>
+        <span class="rv" style="color:#a0aec0;font-size:.8rem">請補輸入滲透率及客單價</span></div>`;
+    }
+
+    q4YEBlock = `
+      <div class="ye-block" style="margin-top:10px">
+        <div class="ye-title">🏁 年底績效獎金結算（H2 合計）</div>
+        ${yeCalcRows}
+      </div>`;
+  }
+
+  // ── Render zero (below 70% threshold) ──
+  if (commRate === 0) {
+    rd.innerHTML = `
+      <div class="res-box">
+        <div class="rr"><span class="rl">達成率</span><span class="rv">${fP(achRate)}</span></div>
+        <div class="fail-box">⚠️ 未達 70% 門檻，本季獎金為零</div>
+        ${isQ4 && (penCoeff!==null || aspCoeff!==null)
+          ? `<div class="rt" style="margin-top:10px">績效獎金基準（20%）</div>
+             <div class="rr"><span class="rl">本季績效獎金基準額</span><span class="rv" style="color:#a0aec0">0 元（未達門檻）</span></div>
+             ${coeffTable}`
+          : ''}
+      </div>
+      ${q4YEBlock}`;
+
+    const yeTotal = (isQ4 && appliedCoeff!==null)
+      ? (q3Data ? q3Data.perfBase : 0) * appliedCoeff : null;
+    return { targetBonus:0, perfBase:0, appliedCoeff, perfEst:0, finalCoeff, yeTotal };
+  }
+
   // Q3 estimate note (not a payment)
   let q3EstBlock = '';
   if (!isQ4) {
@@ -768,41 +821,6 @@ function calcQ(pre, isQ4, q3Data) {
       ${coeffTable}
       ${estTxt}`;
   }
-
-  // Q4 year-end block
-  let q4YEBlock = '';
-  if (isQ4) {
-    const q3Base = q3Data ? q3Data.perfBase : 0;
-    const h2Base = q3Base + perfBase;
-
-    let yeCalcRows = '';
-    if (appliedCoeff !== null) {
-      const yeTotal = h2Base * appliedCoeff;
-      yeCalcRows = `
-        <div class="rr"><span class="rl">Q3 績效獎金基準</span><span class="rv">${fN(q3Base)}</span></div>
-        <div class="rr"><span class="rl">Q4 績效獎金基準</span><span class="rv">${fN(perfBase)}</span></div>
-        <div class="rr"><span class="rl">H2 基準合計</span><span class="rv"><b>${fN(h2Base)}</b></span></div>
-        <div class="rr"><span class="rl">× Q4 最終係數</span><span class="rv">${appliedCoeff.toFixed(2)}×</span></div>
-        <div class="hl hl-green" style="margin-top:8px">
-          <span class="hl-lbl">年底績效獎金（全額）</span>
-          <span class="hl-val">${fN(yeTotal)}</span>
-        </div>`;
-    } else {
-      yeCalcRows = `<div class="rr"><span class="rl">年底績效獎金</span>
-        <span class="rv" style="color:#a0aec0;font-size:.8rem">請補輸入滲透率及客單價</span></div>`;
-    }
-
-    q4YEBlock = `
-      <div class="ye-block" style="margin-top:10px">
-        <div class="ye-title">🏁 年底績效獎金結算（H2 合計）</div>
-        ${yeCalcRows}
-      </div>`;
-  }
-
-  // Q4 perf section label
-  const perfTitle = isQ4
-    ? '' // year-end block handles it
-    : '';
 
   rd.innerHTML = `
     <div class="res-box">
@@ -866,6 +884,22 @@ function calc() {
   } else {
     $('s_total').textContent = '請輸入數據';
     $('s_breakdown').textContent = '';
+  }
+
+  // ── Bottom year-end section ──
+  const yeBottom = $('ye-bottom');
+  if (q4) {
+    const q3BaseVal = q3 ? q3.perfBase : 0;
+    const q4BaseVal = q4.perfBase; // 0 when below threshold
+    const h2BaseVal = q3BaseVal + q4BaseVal;
+    yeBottom.style.display = '';
+    $('ye_q3b').textContent = isNaN(q3BaseVal) ? '—' : Math.round(q3BaseVal).toLocaleString('zh-TW') + ' 元';
+    $('ye_q4b').textContent = isNaN(q4BaseVal) ? '—' : Math.round(q4BaseVal).toLocaleString('zh-TW') + ' 元';
+    $('ye_h2b').innerHTML = isNaN(h2BaseVal) ? '—' : '<b>' + Math.round(h2BaseVal).toLocaleString('zh-TW') + ' 元</b>';
+    $('ye_coeff').textContent = q4.appliedCoeff !== null ? q4.appliedCoeff.toFixed(2)+'×' : '待輸入指標';
+    $('ye_ttl').textContent = ye !== null ? Math.round(ye).toLocaleString('zh-TW') + ' 元' : '待輸入指標';
+  } else {
+    yeBottom.style.display = 'none';
   }
 }
 
