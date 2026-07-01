@@ -573,7 +573,7 @@ function handleGoogleLogin(response) {
   <div id="summary-cols" style="display:flex;gap:16px;align-items:flex-start">
 
     <!-- Left: Year-end breakdown (hidden until Q4 entered) -->
-    <div class="ye-block" id="ye-bottom" style="display:none;flex-shrink:0;width:280px">
+    <div class="ye-block" id="ye-bottom" style="display:none;flex:1;min-width:0">
       <div class="ye-title">🏁 年底績效獎金結算（H2 合計）</div>
       <div class="rr"><span class="rl">Q3 績效獎金基準</span><span class="rv" id="ye_q3b">—</span></div>
       <div class="rr"><span class="rl">Q4 績效獎金基準</span><span class="rv" id="ye_q4b">—</span></div>
@@ -761,35 +761,8 @@ function calcQ(pre, isQ4, q3Data) {
       <span class="rv">${aspCoeff.toFixed(2)}× ${badge(l,c)}</span></div>`;
   }
 
-  // ── Q4 year-end block (built regardless of threshold; perfBase=0 when below threshold) ──
-  let q4YEBlock = '';
-  if (isQ4) {
-    const q3BaseYE = q3Data ? q3Data.perfBase : 0;
-    const h2BaseYE = q3BaseYE + perfBase;
-
-    let yeCalcRows = '';
-    if (appliedCoeff !== null) {
-      const yeTotalYE = h2BaseYE * appliedCoeff;
-      yeCalcRows = `
-        <div class="rr"><span class="rl">Q3 績效獎金基準</span><span class="rv">${fN(q3BaseYE)}</span></div>
-        <div class="rr"><span class="rl">Q4 績效獎金基準</span><span class="rv">${fN(perfBase)}</span></div>
-        <div class="rr"><span class="rl">H2 基準合計</span><span class="rv"><b>${fN(h2BaseYE)}</b></span></div>
-        <div class="rr"><span class="rl">× Q4 最終係數</span><span class="rv">${appliedCoeff.toFixed(2)}×</span></div>
-        <div class="hl hl-green" style="margin-top:8px">
-          <span class="hl-lbl">年底績效獎金（全額）</span>
-          <span class="hl-val">${fN(yeTotalYE)}</span>
-        </div>`;
-    } else {
-      yeCalcRows = `<div class="rr"><span class="rl">年底績效獎金</span>
-        <span class="rv" style="color:#a0aec0;font-size:.8rem">請補輸入滲透率及客單價</span></div>`;
-    }
-
-    q4YEBlock = `
-      <div class="ye-block" style="margin-top:10px">
-        <div class="ye-title">🏁 年底績效獎金結算（H2 合計）</div>
-        ${yeCalcRows}
-      </div>`;
-  }
+  // Q4 year-end block removed from card — shown in bottom summary section instead
+  const q4YEBlock = '';
 
   // ── Render zero (below 70% threshold) ──
   if (commRate === 0) {
