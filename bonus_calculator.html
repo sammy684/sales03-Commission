@@ -703,13 +703,13 @@ function calcQ(pre, isQ4, q3Data) {
 
   // ── Helper functions ──
   function penAchieveDesc(d) {
-    const p = (Math.abs(d)*100).toFixed(1);
+    const p = (Math.abs(d)*100).toFixed(2);
     if (d > 0.0001) return `超過目標 ${p}%`;
     if (d < -0.0001) return `低於目標 ${p}%`;
     return '達到目標';
   }
   function aspAchieveDesc(d) {
-    const p = (Math.abs(d)*100).toFixed(1);
+    const p = (Math.abs(d)*100).toFixed(2);
     if (d > 0.0001) return `高於去年 ${p}%`;
     if (d < -0.0001) return `低於去年 ${p}%`;
     return '與去年持平';
@@ -769,7 +769,7 @@ function calcQ(pre, isQ4, q3Data) {
     rd.innerHTML = `
       <div class="res-box">
         <div class="rr"><span class="rl">達成率</span><span class="rv">${fP(achRate)}</span></div>
-        <div class="fail-box">⚠️ 未達 70% 門檻，本季獎金為零</div>
+        <div class="fail-box">⚠️ 未達 70% 門檻，本季獎金為零⚠️<br><span style="font-weight:400;font-size:.82rem">(別氣餒，請繼續加油!!! 💪💪💪)</span></div>
         ${isQ4 && (penCoeff!==null || aspCoeff!==null)
           ? `<div class="rt" style="margin-top:10px">績效獎金基準（20%）</div>
              <div class="rr"><span class="rl">本季績效獎金基準額</span><span class="rv" style="color:#a0aec0">0 元（未達門檻）</span></div>
@@ -793,7 +793,7 @@ function calcQ(pre, isQ4, q3Data) {
              <span class="rl">績效基準 ${fN(perfBase)} × ${appliedCoeff.toFixed(2)}×</span>
              <span class="rv" style="color:#a0aec0">${fN(perfEst)}</span>
            </div>
-           <p style="font-size:.7rem;color:#a0aec0;font-style:italic;margin-top:5px;text-align:right">★ 此金額在當季不發放，累計到年底結算當年度的總成果，計算出全年最終係數，再統一核算發放金額</p>
+           <p style="font-size:.75rem;color:#c53030;font-weight:700;font-style:normal;margin-top:6px;text-align:right;background:#fff5f5;border-radius:5px;padding:5px 8px">★ 此金額在當季不發放，累計到年底結算當年度的總成果，計算出全年最終係數，再統一核算發放金額</p>
          </div>`
       : `<div class="rr" style="margin-top:4px"><span class="rl">績效估算</span>
            <span class="rv" style="color:#a0aec0;font-size:.8rem">請補輸入指標</span></div>`;
@@ -891,7 +891,7 @@ function updateMeta() {
   const today = new Date();
   const ds = today.getFullYear()+'/'+(today.getMonth()+1)+'/'+ today.getDate();
   $('print-meta').textContent =
-    [dept && `組別：${dept}`, name && `業務：${name}`, `試算日期：${ds}`]
+    [dept && `組刡：${dept}`, name && `業務：${name}`, `試算日期：${ds}`]
     .filter(Boolean).join('　　');
 }
 
